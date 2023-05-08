@@ -245,7 +245,9 @@ func (b *ByBitWS) processMessage(messageType int, data []byte) {
 			return
 		}
 
-		b.processKLine(symbol, data[0])
+		for _, kline := range data {
+			b.processKLine(symbol, kline)
+		}
 	}
 }
 
