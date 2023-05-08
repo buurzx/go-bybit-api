@@ -269,5 +269,7 @@ func (b *ByBitWS) CloseAndReconnect() {
 }
 
 func (b *ByBitWS) Close() {
-	b.conn.Close()
+	if b.conn.IsConnected() {
+		b.conn.Close()
+	}
 }
