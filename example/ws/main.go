@@ -22,7 +22,7 @@ func main() {
 	}
 
 	bbWS := ws.New(cfg)
-	bbWS.Subscribe(ws.WSKLine + ".1.BTCUSDT")
+	bbWS.Subscribe(ws.WSKLine, "1", "BTCUSDT")
 	bbWS.On(ws.WSKLine, handleKLine)
 
 	bbWS.Start()

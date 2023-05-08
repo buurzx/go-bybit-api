@@ -106,7 +106,20 @@ func (b *ByBitWS) IsConnected() bool {
 	return b.conn.IsConnected()
 }
 
-func (b *ByBitWS) Subscribe(arg string) {
+// Topic => `kline`
+//
+// Interval
+// 1 3 5 15 30 60 120 240 360 720 minute
+// D day
+// W week
+// M month
+//
+// CoinPair => BTCUSDT
+//
+// Subscribe subscribes on ws topic to fetch data
+func (b *ByBitWS) Subscribe(topic, interval, coinPair string) {
+	arg := strings.Join([]string{topic, interval, coinPair}, ".")
+
 	cmd := Cmd{
 		Op:   "subscribe",
 		Args: []interface{}{arg},
