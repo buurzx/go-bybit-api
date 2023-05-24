@@ -1,3 +1,12 @@
+# go-bybit-api
+Go library for using the ByBit's Websocket API
+
+[ByBit API Doc](https://bybit-exchange.github.io/docs/v5/websocket/public/kline)
+
+### Example
+
+### Websocket
+```go
 package main
 
 import (
@@ -37,3 +46,4 @@ func main() {
 func handleKLine(symbol string, data ws.KLine) {
 	log.Printf("handleKLine %v/%#v \n", symbol, data)
 }
+```
