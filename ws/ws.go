@@ -29,8 +29,7 @@ const (
 )
 
 const (
-	WSKLine = "kline"
-
+	WSKLine        = "kline"
 	WSDisconnected = "disconnected"
 )
 
