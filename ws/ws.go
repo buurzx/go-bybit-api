@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -126,6 +127,33 @@ func (b *ByBitWS) Subscribe(topic, interval, coinPair string) {
 
 	b.subscribeCmds = append(b.subscribeCmds, cmd)
 	b.SendCmd(cmd)
+}
+
+// SubscribeToMany
+//
+// stream examples
+//
+//	"orderbook.1.BTCUSDT"
+//	"publicTrade.BTCUSDT"
+func (b *ByBitWS) SubscribeToMany(streams ...string) error {
+	if len(streams) == 0 {
+		return errors.New("streams should not be empty")
+	}
+
+	preparedStreams := []interface{}{}
+	for _, s := range streams {
+		preparedStreams = append(preparedStreams, s)
+	}
+
+	cmd := Cmd{
+		Op:   "subscribe",
+		Args: preparedStreams,
+	}
+
+	b.subscribeCmds = append(b.subscribeCmds, cmd)
+	b.SendCmd(cmd)
+
+	return nil
 }
 
 func (b *ByBitWS) SendCmd(cmd Cmd) error {

@@ -18,11 +18,20 @@ func main() {
 	cfg := &ws.Configuration{
 		Addr:          ws.HostPerpetualtTestnet,
 		AutoReconnect: true,
-		DebugMode:     false,
+		DebugMode:     true,
 	}
 
 	bbWS := ws.New(cfg)
-	bbWS.Subscribe(ws.WSKLine, "1", "BTCUSDT")
+	// bbWS.Subscribe(ws.WSKLine, "1", "BTCUSDT")
+	err := bbWS.SubscribeToMany(
+		"orderbook.1.BTCUSDT",
+		"publicTrade.BTCUSDT",
+		"orderbook.1.ETHUSDT",
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	bbWS.On(ws.WSKLine, handleKLine)
 
 	bbWS.Start()
