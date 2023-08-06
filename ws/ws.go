@@ -31,6 +31,8 @@ const (
 
 const (
 	WSKLine        = "kline"
+	WSKPublicTrade = "publicTrade"
+	WSKOrderbook   = "orderbook"
 	WSDisconnected = "disconnected"
 )
 
@@ -118,10 +120,29 @@ func (b *ByBitWS) IsConnected() bool {
 //
 // Subscribe subscribes on ws topic to fetch data
 func (b *ByBitWS) Subscribe(topic, interval, coinPair string) {
-	arg := strings.Join([]string{topic, interval, coinPair}, ".")
+	var arg string
+
+	if interval == "" {
+		arg = strings.Join([]string{topic, coinPair}, ".")
+	} else {
+		arg = strings.Join([]string{topic, interval, coinPair}, ".")
+	}
 
 	cmd := Cmd{
 		Op:   "subscribe",
+		Args: []interface{}{arg},
+	}
+
+	b.subscribeCmds = append(b.subscribeCmds, cmd)
+	b.SendCmd(cmd)
+}
+
+// Unsubscribe subscribes on ws topic to fetch data
+func (b *ByBitWS) Unsubscribe(topic, interval, coinPair string) {
+	arg := strings.Join([]string{topic, interval, coinPair}, ".")
+
+	cmd := Cmd{
+		Op:   "unsubscribe",
 		Args: []interface{}{arg},
 	}
 
@@ -177,6 +198,45 @@ func (b *ByBitWS) Send(msg string) error {
 	err = b.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 
 	return err
+}
+
+// StartRAW gives you a raw ws stream, you need to handle pong events by yourself.
+func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) error {
+	b.connect()
+
+	cancel := make(chan struct{})
+
+	go func() {
+		t := time.NewTicker(HeartBeatDuration)
+		defer t.Stop()
+
+		for {
+			select {
+			case <-t.C:
+				b.ping()
+			case <-cancel:
+				return
+			}
+		}
+	}()
+
+	go func() {
+		defer close(cancel)
+
+		for {
+			messageType, data, err := b.conn.ReadMessage()
+			if err != nil {
+				log.Printf("BybitWs Read error, closing connection: %v", err)
+				b.conn.Close()
+				b.Ended = true
+				return
+			}
+
+			processEvent(messageType, data)
+		}
+	}()
+
+	return nil
 }
 
 func (b *ByBitWS) Start() error {
@@ -245,7 +305,7 @@ func (b *ByBitWS) processMessage(messageType int, data []byte) {
 	}
 
 	if ret.Get("ret_msg").String() == "pong" {
-		b.handlePong()
+		b.HandlePong()
 	}
 
 	if topicValue := ret.Get("topic"); topicValue.Exists() {
@@ -278,7 +338,7 @@ func (b *ByBitWS) processMessage(messageType int, data []byte) {
 	}
 }
 
-func (b *ByBitWS) handlePong() (err error) {
+func (b *ByBitWS) HandlePong() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("handlePong error: %v", r)

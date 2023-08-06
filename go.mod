@@ -6,7 +6,7 @@ require (
 	github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9
 	github.com/gorilla/websocket v1.5.0
 	github.com/jpillora/backoff v1.0.0
-	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/gjson v1.15.0
 )
 
 require (
