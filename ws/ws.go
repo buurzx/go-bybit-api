@@ -226,7 +226,7 @@ func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) {
 		for {
 			messageType, data, err := b.conn.ReadMessage()
 			if err != nil {
-				log.Printf("BybitWs Read error, closing connection: %v", err)
+				log.Fatalf("BybitWs Read error, closing connection: %v \n", err)
 				b.conn.Close()
 				b.Ended = true
 				return
