@@ -27,7 +27,8 @@ func main() {
 
 	bbWS.On(ws.WSKLine, handleKLine)
 
-	bbWS.Start()
+	// bbWS.Start()
+	bbWS.StartRAW(handleRaw)
 
 	bbWS.Subscribe(ws.WSKLine, "5", "ETHUSDT")
 
@@ -43,4 +44,8 @@ func main() {
 
 func handleKLine(symbol string, data ws.KLine) {
 	log.Printf("handleKLine %v/%#v \n", symbol, data)
+}
+
+func handleRaw(messageType int, data []byte) {
+	log.Printf("raw stream %v \n", string(data))
 }

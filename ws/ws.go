@@ -201,7 +201,7 @@ func (b *ByBitWS) Send(msg string) error {
 }
 
 // StartRAW gives you a raw ws stream, you need to handle pong events by yourself.
-func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) error {
+func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) {
 	b.connect()
 
 	cancel := make(chan struct{})
@@ -235,8 +235,6 @@ func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) error {
 			processEvent(messageType, data)
 		}
 	}()
-
-	return nil
 }
 
 func (b *ByBitWS) Start() error {
