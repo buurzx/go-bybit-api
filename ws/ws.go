@@ -201,30 +201,32 @@ func (b *ByBitWS) Send(msg string) error {
 }
 
 // StartRAW gives you a raw ws stream, you need to handle pong events by yourself.
-func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) {
+func (b *ByBitWS) StartRAW(eventCH chan string) chan struct{} {
 	b.connect()
 
-	cancel := make(chan struct{})
+	cancelPingCH := make(chan struct{})
+	cancelWSListnerCH := make(chan struct{})
 
 	go func() {
 		t := time.NewTicker(HeartBeatDuration)
 		defer t.Stop()
+		defer close(cancelPingCH)
 
 		for {
 			select {
 			case <-t.C:
 				b.ping()
-			case <-cancel:
+			case <-cancelPingCH:
 				return
 			}
 		}
 	}()
 
 	go func() {
-		defer close(cancel)
+		defer close(cancelWSListnerCH)
 
 		for {
-			messageType, data, err := b.conn.ReadMessage()
+			_, data, err := b.conn.ReadMessage()
 			if err != nil {
 				log.Fatalf("BybitWs Read error, closing connection: %v \n", err)
 				b.conn.Close()
@@ -232,9 +234,17 @@ func (b *ByBitWS) StartRAW(processEvent func(int, []byte)) {
 				return
 			}
 
-			processEvent(messageType, data)
+			select {
+			case <-cancelWSListnerCH:
+				cancelPingCH <- struct{}{}
+				return
+			default:
+				eventCH <- string(data)
+			}
 		}
 	}()
+
+	return cancelWSListnerCH
 }
 
 func (b *ByBitWS) Start() error {
@@ -348,6 +358,7 @@ func (b *ByBitWS) HandlePong() (err error) {
 	if pongHandler != nil {
 		pongHandler("pong")
 	}
+
 	return nil
 }
 

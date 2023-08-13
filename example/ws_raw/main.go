@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,9 +24,10 @@ func main() {
 	bbWS.Subscribe(ws.WSKLine, "1", "BTCUSDT")
 	bbWS.Subscribe(ws.WSKPublicTrade, "", "BTCUSDT")
 
-	bbWS.On(ws.WSKLine, handleKLine)
+	eventCH := make(chan string)
+	doneCH := bbWS.StartRAW(eventCH)
 
-	bbWS.Start()
+	go handleRaw(eventCH)
 
 	bbWS.Subscribe(ws.WSKLine, "5", "ETHUSDT")
 
@@ -35,12 +35,17 @@ func main() {
 	bbWS.Unsubscribe(ws.WSKLine, "1", "BTCUSDT")
 
 	<-sigCH
+
 	fmt.Println("Shutdown ...")
 
+	doneCH <- struct{}{}
 	bbWS.Close()
+
 	<-time.After(time.Second * 1)
 }
 
-func handleKLine(symbol string, data ws.KLine) {
-	log.Printf("handleKLine %v/%#v \n", symbol, data)
+func handleRaw(eventCH chan string) {
+	for event := range eventCH {
+		fmt.Println("Event: ", event)
+	}
 }
